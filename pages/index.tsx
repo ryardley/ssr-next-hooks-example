@@ -4,6 +4,7 @@ import { useInteraction } from "../lib/useInteraction";
 import { getName } from "../funcs/getName";
 import NestedHook from "../components/NestedHook";
 
+// withSsrHooks can be added via babel transform wrapping whatever is exported by `export default`
 export default withSsrHooks(() => {
   const [data] = useInteraction(getName, 2);
 
