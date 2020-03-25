@@ -1,4 +1,4 @@
-import { useInteraction } from "../lib/useInteraction";
+import { useInteraction } from "./useInteraction";
 import { getName } from "../funcs/getName";
 export default () => {
   const [data] = useInteraction(getName, 1);

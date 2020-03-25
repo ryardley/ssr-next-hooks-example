@@ -1,6 +1,6 @@
 import React from "react";
 import { withSsrHooks } from "../lib/withSsrHooks";
-import { useInteraction } from "../lib/useInteraction";
+import { useInteraction } from "../components/useInteraction";
 import { getName } from "../funcs/getName";
 import NestedHook from "../components/NestedHook";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { processInput } from "./withSsrHooks";
+import { processInput } from "../lib/withSsrHooks";
 
 export function useInteraction(interaction: Function, args: any) {
   const [data, setData] = React.useState(processInput(interaction, args));
