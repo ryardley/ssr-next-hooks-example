@@ -1,12 +1,20 @@
 import React from "react";
 import { renderToString } from "react-dom/server";
 
-// Can be set to point to a generated file
-import funcLookup from "../funcs";
+type Fn = { _callId: string };
 
-let _hooksCache = {};
+const _functionLookup = {};
 
-type Fn = { name: string };
+export function createClientFunction(id: string, fn: any) {
+  _functionLookup[id] = fn;
+  fn._callId = id;
+  return fn;
+}
+
+function getClientFunctionId(fn: any) {
+  if (!fn._callId) throw new Error("Cannot get client function id");
+  return fn._callId;
+}
 
 function serialize(value: any) {
   try {
@@ -19,15 +27,18 @@ function serialize(value: any) {
   }
 }
 
+let _hooksCache = {};
 const HooksCache = {
   get(fn: Fn, args: any) {
     const serializedArgs = serialize(args);
-    const serializedFn = fn.name;
-    return _hooksCache[serializedFn] && _hooksCache[fn.name][serializedArgs];
+    const serializedFn = getClientFunctionId(fn);
+    return (
+      _hooksCache[serializedFn] && _hooksCache[serializedFn][serializedArgs]
+    );
   },
   set(fn: Fn, args: any, value: any) {
     const serializedArgs = serialize(args);
-    const serializedFn = fn.name;
+    const serializedFn = getClientFunctionId(fn);
     if (_hooksCache[serializedFn] === undefined) {
       _hooksCache[serializedFn] = {};
     }
@@ -92,6 +103,7 @@ export function processInput(computation, args) {
   // This is our isomorphic cache
 
   const value = HooksCache.get(computation, args);
+
   if (isServer() && value == null) {
     HooksCache.set(computation, args, HOOKS_RESULT_PLACEHOLDER);
   }
@@ -105,7 +117,7 @@ async function processHooksCacheQueue(
 ) {
   for (const [fName, calls] of entries) {
     for (const [serializedArgs] of Object.entries(calls)) {
-      const func = funcLookup[fName];
+      const func = _functionLookup[fName];
       const deserializedArgs = JSON.parse(serializedArgs);
       try {
         const argsArray = Array.isArray(deserializedArgs)
@@ -113,7 +125,7 @@ async function processHooksCacheQueue(
           : [deserializedArgs];
 
         const result = await func(...argsArray);
-        HooksCache.set({ name: fName }, deserializedArgs, result);
+        HooksCache.set({ _callId: fName }, deserializedArgs, result);
       } catch (err) {
         throw err;
       }
